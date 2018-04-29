@@ -1,0 +1,84 @@
+##############################################################################
+## Provision tiller
+## This role executes much of the needed functionality to provision an
+## application using an Ansible Playbook Bundle.  Included in the comments
+## below are some sample resources for getting started deploying an application
+## to OpenShift.
+##############################################################################
+
+- name: create service account
+  k8s_v1_service_account:
+    name: tiller
+    namespace: '{{ namespace }}'
+    state: '{{ state }}'
+
+- name: create role binding
+  k8s_v1_role_binding:
+    name: tiller-foo-rolebinding
+    namespace: '{{ namespace }}'
+    role_ref_kind: ClusterRole
+    role_ref_name: edit
+    role_ref_api_group: "rbac.authorization.k8s.io"
+    subjects:
+    - kind: ServiceAccount
+      name: tiller
+      namespace: '{{ namespace }}'
+    state: '{{ state }}'
+
+- name: create deployment config
+  openshift_v1_deployment_config:
+    name: tiller
+    namespace: '{{ namespace }}'
+    labels:
+      app: helm
+      name: tiller
+    replicas: 1
+    selector:
+      app: helm
+      name: tiller
+    spec_template_metadata_labels:
+      app: helm
+      name: tiller
+    spec_template_spec_service_account_name: tiller
+    containers:
+    - env:
+      - name: TILLER_NAMESPACE
+        value: '{{ namespace }}'
+      - name: TILLER_HISTORY_MAX
+        value: "0"
+      image: gcr.io/kubernetes-helm/tiller:v2.8.1
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        httpGet:
+          path: /liveness
+          port: 44135
+        initialDelaySeconds: 1
+        timeoutSeconds: 1
+      name: tiller
+      ports:
+      - containerPort: 44134
+        name: tiller
+      - containerPort: 44135
+        name: http
+      readinessProbe:
+        httpGet:
+          path: /readiness
+          port: 44135
+        initialDelaySeconds: 1
+        timeoutSeconds: 1
+    state: '{{ state }}'
+
+- name: create tiller service
+  k8s_v1_service:
+    name: tiller
+    namespace: '{{ namespace }}'
+    labels:
+      app: helm
+      name: tiller
+    selector:
+      app: helm
+      name: tiller
+    ports:
+      - name: tiller
+        port: 44134
+    state: '{{ state }}'

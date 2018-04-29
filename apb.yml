@@ -1,0 +1,13 @@
+version: 1.0
+name: tiller-apb
+description: Installs tiller for single-namespace use
+bindable: False
+async: optional
+metadata:
+  displayName: tiller (APB)
+plans:
+  - name: default
+    description: This default plan deploys tiller-apb
+    free: True
+    metadata: {}
+    parameters: []
