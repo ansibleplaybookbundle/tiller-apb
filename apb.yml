@@ -4,7 +4,8 @@ description: Installs tiller for single-namespace use
 bindable: False
 async: optional
 metadata:
-  displayName: tiller (APB)
+  displayName: Tiller (APB)
+  imageUrl: 'https://www.helm.sh/assets/images/helm-logo.svg'
 plans:
   - name: default
     description: This default plan deploys tiller-apb
